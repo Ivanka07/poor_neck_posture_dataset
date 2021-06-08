@@ -128,7 +128,7 @@ def get_frames_and_save(video_dir, csv_path, log_file="../processed_videos.log")
                 os.makedirs(target_dir, exist_ok=True)
                 res = extract_frames_from_video(video_file, video_id, target_dir)
                 if len(res) > 0:
-                    file_object.write(res[0][0])
+                    file_object.write('finished processing = ' + res[0][0])
                     results.extend(res)
                # return
     df = pd.DataFrame(results)
