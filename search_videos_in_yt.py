@@ -63,8 +63,8 @@ def download_youtube_video(target_dir, video_id):
 
 if __name__=='__main__':
   response = None
-  target_dir ='./data'
-  search_key = 'smartphone addiction'
+  target_dir ='./test_data/'
+  search_key = 'person waving'
   for i in range(10):
     
     if i !=0:
@@ -80,7 +80,7 @@ if __name__=='__main__':
       if not video_exists(target_dir, video_id):
         print('video=', video_id, ' does not exist')
         try:
-          download_youtube_video('./data',video_id)
+          download_youtube_video(target_dir,video_id)
         except (http.client.IncompleteRead) as e:
           print('Could not read video_id=', video_id)
           

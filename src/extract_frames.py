@@ -40,7 +40,9 @@ CSV_HEADER = [  'video_id',
 
 human = ['person', 'people', 'man', 'men', 'woman', 'women', 'human', 'persons']
 action = ['sitting', 'standing', 'laying', 'using', 'looking']
+objects = ['cell phone', 'laptope', 'pc', 'table', 'diningtable']
 
+#todo incorporate the words into score calculation
 def get_score(words, detected_classes):
     score = 0
     if words is None or detected_classes is None:
