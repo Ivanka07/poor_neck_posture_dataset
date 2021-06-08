@@ -64,7 +64,7 @@ def download_youtube_video(target_dir, video_id):
 if __name__=='__main__':
   response = None
   target_dir ='./data'
-  search_key = 'children using smarthphone'
+  search_key = 'smartphone addiction'
   for i in range(10):
     
     if i !=0:
