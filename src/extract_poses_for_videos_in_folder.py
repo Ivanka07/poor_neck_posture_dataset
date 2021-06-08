@@ -3,6 +3,13 @@ import pandas
 import sys
 import os
 
+nameToId = {
+	'text_neck':0,
+	'poor_sitting_posture':1,
+	'correct_standing_posture':2,
+	'correct_sitting_posture':3
+}
+
 
 #checks, whether time entry has a format 'mm:ss'
 def check_time(start_time, end_time):
@@ -74,18 +81,24 @@ if __name__ == '__main__':
     #download_videos(data, video_folder)
     #cmd = "ffmpeg -ss 00:08:00 -i Video.mp4 -ss 00:01:00 -t 00:01:00 -c copy "
 	#ffmpeg -ss 00:02:02 -i videos/cVd76HsjzVs.mp4 -to 00:00:02 -c copy clips/output.mp4
+    overall_duration = 0
 
     for row in data.iterrows():
 		#check for ':' in start_time and end_time
 	    start_time = row[1].start_sec
 	    end_time = row[1].end_sec
+	    class_name = row[1].class_id
+	    class_id = nameToId[class_name]
 	    duration  = calc_duration(start_time, end_time)
+	    overall_duration += duration
 	    s,t =check_time(start_time, end_time)
 	    video_id = extract.get_youtube_video_id_from_url(row[1].url)
 	    video_filename = "%s/%s.mp4"%(video_folder + '/videos', video_id)
 	    print(video_filename)
-	    clip_filename = "%s/%s_%s.mp4"%(video_folder + '/clips', video_id , str(s) + '_' + str(t))
+	    clip_filename = "%s/%s_%s_%s.mp4"%(video_folder + '/clips', video_id , str(s) + '_' + str(t), str(class_id))
 	    print(clip_filename)
 	    cmd = "ffmpeg -ss 00:%s -i %s  -to 00:00:%s -c copy %s"%(start_time,video_filename,duration,clip_filename)
 	    print(cmd)
 	    os.system(cmd)
+
+    print('overall_duration = ', overall_duration)

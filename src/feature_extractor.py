@@ -72,7 +72,6 @@ class Pose():
         pose_size = max(torso_size * self.torso_multiplier, max_dist)
         
         for key, value in self.landmarks.items():
-            print(pose_size)
             normilized_landmarks[key] = np.copy(value[0:3]) / pose_size
         return normilized_landmarks
 
@@ -106,17 +105,35 @@ class FeatureExtractor():
 
 
     def extract_features(self):
+        features = []
         with open(self.json_file) as f:
             data = json.load(f)
-            print(len(data['data']))
+           # print(len(data['data']))
             for key, value in data['data'].items():
-                print(key)
+               #print(key)
                 keypoints = data['data'][key]['person00'] 
-                print(len(keypoints))
+               # print(len(keypoints))
                 if len(keypoints) == 33:
                     pose = Pose(keypoints)
-                    self.extract_single_frame(pose)
+                    coordinates = np.array(self.extract_2d_coordinates(pose))
+                    _features = self.extract_single_frame(pose)
+                    concat = np.concatenate((_features, coordinates), axis=0)
+                   # features.append(self.extract_single_frame(pose))
+                    features.append(concat)
+        return features
 
+    def extract_2d_coordinates(self, pose):
+        """Extract defined features from a single frame
+        :param Pose pose
+        :return array features
+        """
+        normilized_lmks = pose.normilize()
+
+        values = []
+        for v in normilized_lmks.values():
+            values.append(v[0])
+            values.append(v[1])
+        return values
 
 
     def extract_single_frame(self, pose):
@@ -126,10 +143,11 @@ class FeatureExtractor():
         """
         normilized_lmks = pose.normilize()
         features = np.array([
-            self.get_distance_by_names(normilized_lmks, 'nose', 'left_shoulder'),
-            self.get_distance_by_names(normilized_lmks, 'nose', 'right_shoulder'),
-            self.get_distance_by_names(normilized_lmks, 'nose', 'left_wrist'),
-            self.get_distance_by_names(normilized_lmks, 'nose', 'right_wrist'),
+    #        self.get_distance_by_names(normilized_lmks, 'nose', 'left_ankle'),
+    #        self.get_distance_by_names(normilized_lmks, 'nose', 'right_ankle'),
+    #       self.get_distance_by_names(normilized_lmks, 'nose', 'left_shoulder'),
+    #        self.get_distance_by_names(normilized_lmks, 'nose', 'right_shoulder'),
+
             self.get_distance_by_names(normilized_lmks, 'nose', 'left_wrist'),
             self.get_distance_by_names(normilized_lmks, 'nose', 'right_wrist'),
             self.get_distance_by_names(normilized_lmks, 'left_shoulder', 'left_wrist'),
@@ -151,9 +169,20 @@ class FeatureExtractor():
             self.get_distance_by_names(normilized_lmks, 'left_hip', 'left_ankle'),
             self.get_distance_by_names(normilized_lmks, 'right_hip', 'right_ankle'),
             self.get_distance_by_names(normilized_lmks, 'left_hip', 'right_ankle'),
-            self.get_distance_by_names(normilized_lmks, 'right_hip', 'left_ankle')]
+            self.get_distance_by_names(normilized_lmks, 'right_hip', 'left_ankle'),
+            self.get_distance_by_names(normilized_lmks, 'right_ankle', 'right_shoulder'),
+            self.get_distance_by_names(normilized_lmks, 'left_ankle', 'left_shoulder'),
+            self.get_angle_by_names(normilized_lmks, 'right_shoulder', 'right_elbow', 'right_wrist'),
+            self.get_angle_by_names(normilized_lmks, 'left_shoulder', 'left_elbow', 'left_wrist'),
+            self.get_angle_by_names(normilized_lmks, 'right_shoulder', 'right_hip', 'right_knee'),
+            self.get_angle_by_names(normilized_lmks, 'left_shoulder', 'left_hip', 'left_knee'),
+            self.get_angle_by_names(normilized_lmks, 'right_shoulder', 'right_hip', 'right_ankle'),
+            self.get_angle_by_names(normilized_lmks, 'left_shoulder', 'left_hip', 'left_ankle'),
+            self.get_angle_by_names(normilized_lmks, 'right_hip', 'right_knee', 'right_ankle'),
+            self.get_angle_by_names(normilized_lmks, 'left_hip', 'left_knee', 'left_ankle'),
+            ]
             )
-        print(features)
+        return features
 
         
     def get_average_by_names(self, landmarks, name_from, name_to):
@@ -162,9 +191,11 @@ class FeatureExtractor():
         return (lmk_from + lmk_to) * 0.5
 
     def get_distance_by_names(self, landmarks, name_from, name_to):
-        lmk_from = landmarks[name_from]
-        lmk_to = landmarks[name_to]
-        return lmk_to - lmk_from
+        lmk_from = landmarks[name_from][0:2]
+        lmk_to = landmarks[name_to][0:2]
+       # dist = np.linalg.norm(lmk_to - lmk_from)
+        dist = lmk_to - lmk_from
+        return dist
 
     def get_angle_by_names(self, landmarks, name_1, name_2, name_3):
         p0 = landmarks[name_1][0:2]
@@ -175,13 +206,8 @@ class FeatureExtractor():
         v1 = np.array(p2) - np.array(p1)
 
         angle = np.math.atan2(np.linalg.det([v0,v1]),np.dot(v0,v1))
-        print(np.degree(angle))
+      #  print(np.degrees(angle))
+
+        return angle
 
 
-        return np.math.atan2(np.linalg.det([v0,v1]),np.dot(v0,v1))
-
-
-if __name__ == '__main__':
-    json_file = '../data/JMU2zYrLnK8_10_12.mp4.json'
-    feature_extractor = FeatureExtractor(json_file)
-    feature_extractor.extract_features()
