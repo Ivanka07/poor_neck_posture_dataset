@@ -13,7 +13,7 @@ DEVELOPER_KEY="AIzaSyADZxh712P3wWPRkr7VvJzcT30UYbfzo20"
 YOUTUBE_API_SERVICE_NAME = "youtube"
 YOUTUBE_API_VERSION = "v3"
 SEARCH_PHRASES = ['looking down smarthphone', 'text neck', \
-                  'tech neck', 'children using smarthphone','smartphone Addiction']
+                  'tech neck', 'children using smarthphone','smartphone addiction']
 
 def youtube_search(q, max_results=50,order="relevance", token=None, location=None, location_radius=None):
 
@@ -47,7 +47,7 @@ def youtube_search(q, max_results=50,order="relevance", token=None, location=Non
 
 def video_exists(target_dir, video_id):
   files = os.listdir(target_dir + '/videos')
-  if (video_id + '.mp4' ) in files:
+  if (video_id ) in files:
     print('Video=', video_id, '.mp4 already exists. Continue.')
     return True
   else:
@@ -64,14 +64,15 @@ def download_youtube_video(target_dir, video_id):
 if __name__=='__main__':
   response = None
   target_dir ='./data'
+  search_key = 'children using smarthphone'
   for i in range(10):
     
     if i !=0:
-      response = youtube_search('children using smarthphone',token=response[0])
+      response = youtube_search(search_key,token=response[0])
       nexttok = response[0]
       print('Next tocken = ', nexttok)
     else:
-      response = youtube_search('children using smarthphone')
+      response = youtube_search(search_key)
 
     for search_res in response[1]:
       video_id = search_res['id']['videoId']

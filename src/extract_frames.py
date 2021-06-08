@@ -1,7 +1,6 @@
 import pytube
 import sys
-from tqdm.auto import tqdm
-import pandas
+import pandas as pd
 import ffmpeg
 import numpy as np
 import torch
@@ -32,20 +31,46 @@ from image_caption import get_caption_single_image
 
 #TODO: declare global csv file
 
+CSV_HEADER = [  'video_id',
+                'path_to_frame',
+                'frame_index',
+                'avg_fps',
+                'yolo3_classes',
+                'caption','score']
+
+def get_score(words, detected_classes):
+    score = 0
+    if 'person' in words:
+        score+=1
+    if 'person' in detected_classes:
+        score+=1
+
+    if 'cell phone' in words:
+        score+=1
+
+    if 'cell phone' in detected_classes:
+        score+=1
+
+    return score                
+
+
 def extract_frames_from_video(video_file, video_id, target_dir):
+    results = []
+
     """
     for each video file creates the corresponding directory if not exists 
-    csv item: path_to_frame;frame_index;avg_fps;yolo3_classes;caption;
+    csv item: video_id;path_to_frame;frame_index;avg_fps;yolo3_classes;caption;score;
     """
     # a file like object works as well, for in-memory decoding
     with open(video_file, 'rb') as f:
         vr = VideoReader(f, ctx=cpu(0))
         print('video frames:', len(vr))
         total_frames = len(vr)
-        avg_fps = vr.get_avg_fps()
+        avg_fps = int(vr.get_avg_fps())
         # 1. the simplest way is to directly access frames
         print('get_avg_fps=', vr.get_avg_fps())
-        for i in range(len(vr)):
+        for i in range(0, len(vr), avg_fps):
+            frame_result = []
       #      # the video reader will handle seeking and skipping in the most efficient manner
             frame = vr[i]
             save_path = os.path.join(target_dir,"{:010d}.jpg".format(i))
@@ -55,6 +80,19 @@ def extract_frames_from_video(video_file, video_id, target_dir):
                 img = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
                 detected_classes_list = detect_objects_single_image(img)
                 words = get_caption_single_image(img)
+                score= get_score(words, detected_classes_list)
+                if score > 2:
+
+                    frame_result.append(video_id)
+                    frame_result.append(save_path)
+                    frame_result.append(i)
+                    frame_result.append(avg_fps)
+                    frame_result.append(detected_classes_list)
+                    frame_result.append(words)
+                    frame_result.append(score)
+                    cv2.imwrite(save_path, img)
+                    results.extend(frame_result)
+    return results
                 
           #      cv2.imwrite(save_path, img)
         #save frames into the dir
@@ -65,8 +103,9 @@ def extract_frames_from_video(video_file, video_id, target_dir):
 # if there no difference in the consecutive frames, the frame is removed from the classification
 # it is done in order to neglagate the bias
 
-def get_frames_and_save(video_dir):
+def get_frames_and_save(video_dir, csv_path):
     video_files = []
+    results = []
     for (dirpath, dirnames, filenames) in walk(video_dir):
         for f in filenames:
             if f.endswith('.mp4'):
@@ -76,11 +115,14 @@ def get_frames_and_save(video_dir):
                 video_file = os.path.join(video_dir, f)
                 print(target_dir)
                 os.makedirs(target_dir, exist_ok=True)
-                extract_frames_from_video(video_file, video_id, target_dir)
-                return
-  
+                res = extract_frames_from_video(video_file, video_id, target_dir)
+                results.extend(res)
+               # return
+    df = pd.DataFrame(results)
+    df.to_csv(csv_path, header=CSV_HEADER)
 
 if __name__ == '__main__': 
 
-    video_folder = sys.argv[1] 
-    get_frames_and_save(video_folder)
+    video_folder = sys.argv[1]
+    csf_file =  sys.argv[2]
+    get_frames_and_save(video_folder, csf_file)
