@@ -1,4 +1,11 @@
 python-youtube
+pytube
+decord
 google-api-python-client
 google-auth-oauthlib
 google-auth-httplib2
+opencv-python
+fvcore<0.1.4
+oauth2client
+scikit-image
+scipy==1.1.0
