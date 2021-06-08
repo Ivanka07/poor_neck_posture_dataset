@@ -225,6 +225,7 @@ def get_caption_single_image(img, beam_size=5):
 
     seq, alphas = caption_image_beam_search(encoder, decoder, img, word_map, beam_size)
     words = [rev_word_map[ind] for ind in seq]
+    print(words)
     return words
 
 

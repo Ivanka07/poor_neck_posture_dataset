@@ -38,10 +38,19 @@ CSV_HEADER = [  'video_id',
                 'yolo3_classes',
                 'caption','score']
 
+human = ['person', 'people', 'man', 'men', 'woman', 'women', 'human', 'persons']
+action = ['sitting', 'standing', 'laying', 'using', 'looking']
+
 def get_score(words, detected_classes):
     score = 0
-    if 'person' in words:
-        score+=1
+    if words is None or detected_classes is None:
+        return 0
+    
+    for w in words:
+        if w in human:
+            score+=1
+
+    
     if 'person' in detected_classes:
         score+=1
 
@@ -70,7 +79,7 @@ def extract_frames_from_video(video_file, video_id, target_dir):
         # 1. the simplest way is to directly access frames
         print('get_avg_fps=', vr.get_avg_fps())
         for i in range(0, len(vr), avg_fps):
-            frame_result = []
+            
       #      # the video reader will handle seeking and skipping in the most efficient manner
             frame = vr[i]
             save_path = os.path.join(target_dir,"{:010d}.jpg".format(i))
@@ -82,7 +91,7 @@ def extract_frames_from_video(video_file, video_id, target_dir):
                 words = get_caption_single_image(img)
                 score= get_score(words, detected_classes_list)
                 if score > 2:
-
+                    frame_result = []
                     frame_result.append(video_id)
                     frame_result.append(save_path)
                     frame_result.append(i)
@@ -103,9 +112,10 @@ def extract_frames_from_video(video_file, video_id, target_dir):
 # if there no difference in the consecutive frames, the frame is removed from the classification
 # it is done in order to neglagate the bias
 
-def get_frames_and_save(video_dir, csv_path):
+def get_frames_and_save(video_dir, csv_path, log_file="../processed_videos.log"):
     video_files = []
     results = []
+    file_object = open(log_file, 'a')
     for (dirpath, dirnames, filenames) in walk(video_dir):
         for f in filenames:
             if f.endswith('.mp4'):
@@ -113,13 +123,17 @@ def get_frames_and_save(video_dir, csv_path):
                 print(video_id)
                 target_dir = os.path.join(video_dir, video_id)
                 video_file = os.path.join(video_dir, f)
+                file_object.write('started ' + video_file)
                 print(target_dir)
                 os.makedirs(target_dir, exist_ok=True)
                 res = extract_frames_from_video(video_file, video_id, target_dir)
-                results.extend(res)
+                if len(res) > 0:
+                    file_object.write(res[0][0])
+                    results.extend(res)
                # return
     df = pd.DataFrame(results)
     df.to_csv(csv_path, header=CSV_HEADER)
+    file_object.close()
 
 if __name__ == '__main__': 
 
