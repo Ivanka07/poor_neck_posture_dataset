@@ -13,7 +13,9 @@ DEVELOPER_KEY="AIzaSyADZxh712P3wWPRkr7VvJzcT30UYbfzo20"
 YOUTUBE_API_SERVICE_NAME = "youtube"
 YOUTUBE_API_VERSION = "v3"
 SEARCH_PHRASES = ['looking down smarthphone', 'text neck', \
-                  'tech neck', 'children using smarthphone','smartphone addiction']
+                  'tech neck', 'children using smarthphone',\
+                  'smartphone addiction', 'nomophobia', \
+                  'mobile phone anxiety']
 
 def youtube_search(q, max_results=50,order="relevance", token=None, location=None, location_radius=None):
 
@@ -62,8 +64,8 @@ def download_youtube_video(target_dir, video_id):
   os.rename(video_filename, target_filename)
 
 if __name__=='__main__':
+  target_dir = sys.argv[1]
   response = None
-  target_dir ='./test_data/'
   search_key = 'person waving'
   for i in range(10):
     

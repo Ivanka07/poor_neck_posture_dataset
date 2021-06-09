@@ -52,7 +52,6 @@ def get_score(words, detected_classes):
         if w in human:
             score+=1
 
-    
     if 'person' in detected_classes:
         score+=1
 
